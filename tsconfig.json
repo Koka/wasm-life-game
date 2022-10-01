@@ -17,6 +17,5 @@
     "skipLibCheck": true,
     "baseUrl": "./"
   },
-  "exclude": ["node_modules", "pkg", "target", "**/*.wasm.d.ts"],
   "include": ["src", "wasm"]
 }

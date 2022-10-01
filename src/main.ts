@@ -1,3 +1,6 @@
-import { greet } from 'wasm/wasm-life/pkg/wasm_life'
+import runLife from './game'
 
-greet()
+import './main.css'
+
+runLife()
+
