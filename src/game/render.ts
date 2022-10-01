@@ -36,14 +36,17 @@ export const drawGrid = perfSpan('Draw grid', (ctx: CanvasRenderingContext2D) =>
 
 export const drawCells = perfSpan(
   'Draw cells',
-  (ctx: CanvasRenderingContext2D, isAlive: (row: number, col: number) => boolean) => {
-    const { width, height } = ctx.canvas
-
+  (
+    ctx: CanvasRenderingContext2D,
+    widthCells: number,
+    heightCells: number,
+    isAlive: (row: number, col: number) => boolean
+  ) => {
     ctx.beginPath()
 
     ctx.fillStyle = ALIVE_COLOR
-    for (let row = 0; row < height; row++) {
-      for (let col = 0; col < width; col++) {
+    for (let row = 0; row < heightCells; row++) {
+      for (let col = 0; col < widthCells; col++) {
         if (isAlive(row, col)) {
           ctx.fillRect(col * (CELL_SIZE + 1) + 1, row * (CELL_SIZE + 1) + 1, CELL_SIZE, CELL_SIZE)
         }
@@ -51,8 +54,8 @@ export const drawCells = perfSpan(
     }
 
     ctx.fillStyle = DEAD_COLOR
-    for (let row = 0; row < height; row++) {
-      for (let col = 0; col < width; col++) {
+    for (let row = 0; row < heightCells; row++) {
+      for (let col = 0; col < widthCells; col++) {
         if (!isAlive(row, col)) {
           ctx.fillRect(col * (CELL_SIZE + 1) + 1, row * (CELL_SIZE + 1) + 1, CELL_SIZE, CELL_SIZE)
         }

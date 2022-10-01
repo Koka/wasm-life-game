@@ -32,7 +32,7 @@ function initRenderer(canvas: HTMLCanvasElement, widthCells: number, heightCells
 
   const render = () => {
     drawGrid(ctx)
-    drawCells(ctx, fetchCell)
+    drawCells(ctx, widthCells, heightCells, fetchCell)
   }
 
   return render
