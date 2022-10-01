@@ -1,0 +1,20 @@
+{
+  "name": "wasm-life-game",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "wasm": "wasm-pack build ./wasm/wasm-life --release",
+    "dev": "yarn wasm && vite",
+    "build": "yarn wasm && tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "prettier": "^2.7.1",
+    "typescript": "^4.6.4",
+    "vite": "^3.1.4",
+    "vite-plugin-top-level-await": "^1.1.1",
+    "vite-plugin-wasm": "^3.0.0",
+    "vite-plugin-watch-and-run": "^1.0.3"
+  }
+}
