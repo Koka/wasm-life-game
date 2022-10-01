@@ -2,7 +2,7 @@ import { Cell, Universe } from "wasm/wasm-life/pkg/wasm_life"
 import { memory } from "wasm/wasm-life/pkg/wasm_life_bg.wasm"
 
 import { drawCells, drawGrid, initCanvas } from "./render"
-import { isPerfEnabled, perfSpan, setPerfEnabled } from "./perf"
+import { perfSpan } from "./perf"
 
 function prepareUniverse() {
   const universe = Universe.new()
@@ -11,14 +11,19 @@ function prepareUniverse() {
 
   const tick = perfSpan('Engine tick', () => universe.tick())
 
-  const cellsPtr = universe.cells()
-  const cells = new Uint8Array(memory.buffer, cellsPtr, widthCells * heightCells)
+  let cells = new Uint8Array(memory.buffer, universe.cells(), widthCells * heightCells)
+
+  const restart = () => {
+    universe.restart()
+    cells = new Uint8Array(memory.buffer, universe.cells(), widthCells * heightCells)
+  }
+
   const fetchCell = (row: number, col: number) => {
     const idx = row * widthCells + col
     return cells[idx] === Cell.Alive
   }
 
-  return { widthCells, heightCells, tick, fetchCell }
+  return { widthCells, heightCells, tick, fetchCell, restart }
 }
 
 function initRenderer(widthCells: number, heightCells: number, fetchCell: (row: number, col: number) => boolean) {
@@ -27,16 +32,16 @@ function initRenderer(widthCells: number, heightCells: number, fetchCell: (row: 
   const ctx = initCanvas(canvas, widthCells, heightCells)
   if (!ctx) throw new Error('No canvas 2d context')
 
-  const render = () => drawCells(ctx, fetchCell)
-
-  drawGrid(ctx)
-  render()
+  const render = () => {
+    drawGrid(ctx)
+    drawCells(ctx, fetchCell)
+  }
 
   return render
 }
 
 function runLife() {
-  const { widthCells, heightCells, tick, fetchCell } = prepareUniverse()
+  const { widthCells, heightCells, tick, fetchCell, restart } = prepareUniverse()
   const render = initRenderer(widthCells, heightCells, fetchCell)
 
   let fps = 0
@@ -44,32 +49,40 @@ function runLife() {
     fps = 1000 / ms
   }
 
-  const renderLoop = perfSpan(
+  let loop: null | ReturnType<typeof requestAnimationFrame> = null
+
+  const gameLoop = perfSpan(
     'Loop iteration',
     () => {
       tick()
       render()
-      requestAnimationFrame(renderLoop)
+      loop = requestAnimationFrame(gameLoop)
     },
     calcFps
   )
 
-  requestAnimationFrame(renderLoop)
+  render()
+  loop = requestAnimationFrame(gameLoop)
 
-  const fpsContainer = document.getElementById('fps') as HTMLElement
-  setInterval(() => {
-    const num = Math.round(fps)
-    fpsContainer.textContent = `${num} fps`
-  }, 500)
-
-  const perfBtn = document.getElementById('perfBtn')
-  if (perfBtn) {
-    perfBtn.textContent = `Perf logging ${isPerfEnabled() ? 'ON' : 'OFF'}`
-
-    perfBtn.addEventListener('click', () => {
-      setPerfEnabled(!isPerfEnabled())
-      perfBtn.textContent = `Perf logging ${isPerfEnabled() ? 'ON' : 'OFF'}`
-    })
+  return {
+    restart: () => {
+      restart()
+      if (!loop) {
+        render()
+      }
+    },
+    play: () => {
+      if (loop !== null) return
+      loop = requestAnimationFrame(gameLoop)
+    },
+    pause: () => {
+      if (loop !== null) {
+        cancelAnimationFrame(loop)
+      }
+      loop = null
+    },
+    isPlaying: () => !!loop,
+    getFPS: () => fps,
   }
 }
 

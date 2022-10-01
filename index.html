@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WASM Game of Life</title>
+    <style>
+      body {
+        display: none;
+      }
+    </style>
   </head>
   <body>
     <h1>WASM Game of Life</h1>
@@ -12,8 +17,11 @@
       <canvas id="app"></canvas>
     </main>
     <p>Implemented with vanilla Typescript, WASM, and canvas</p>
-    <div>
-      <button id="perfBtn">Perf logging</button>
+
+    <div class="gameControls">
+      <button class="gameButton" id="restartBtn">Restart</button>
+      <button class="gameButton" id="playPauseBtn">Play / Pause</button>
+      <button class="gameButton" id="perfBtn">Perf logging</button>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

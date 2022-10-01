@@ -1,5 +1,6 @@
 use std::fmt;
 
+use js_sys::Math::random;
 use wasm_bindgen::prelude::*;
 use wee_alloc::WeeAlloc;
 
@@ -20,6 +21,18 @@ pub struct Universe {
     width: u32,
     height: u32,
     cells: Vec<Cell>,
+}
+
+fn initial_pattern(width: u32, height: u32) -> Vec<Cell> {
+    (0..width * height)
+        .map(|i| {
+            if i % 2 == 0 || (random() > 0.9) {
+                Cell::Alive
+            } else {
+                Cell::Dead
+            }
+        })
+        .collect()
 }
 
 impl Universe {
@@ -83,19 +96,14 @@ impl Universe {
         self.cells = next;
     }
 
+    pub fn restart(&mut self) {
+        self.cells = initial_pattern(self.width, self.height);
+    }
+
     pub fn new() -> Universe {
         let width = 128;
         let height = 32;
-
-        let cells = (0..width * height)
-            .map(|i| {
-                if i % 2 == 0 || i % 7 == 0 {
-                    Cell::Alive
-                } else {
-                    Cell::Dead
-                }
-            })
-            .collect();
+        let cells = initial_pattern(width, height);
 
         Universe {
             width,
