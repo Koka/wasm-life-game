@@ -67,6 +67,7 @@ function runLife(canvas: HTMLCanvasElement) {
   loop = requestAnimationFrame(gameLoop)
 
   return {
+    size: [widthCells, heightCells],
     getFPS: () => fps,
 
     restart: () => {

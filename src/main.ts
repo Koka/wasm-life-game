@@ -11,7 +11,9 @@ function buildUI(ctx: ICtx) {
     const fpsNum = Math.round(ctx.getFPS())
     const tickPerFrame = ctx.getSpeed()
 
-    fpsContainer.textContent = `${fpsNum} fps (Speed x${tickPerFrame})`
+    const [w, h] = ctx.size
+
+    fpsContainer.textContent = `${fpsNum} fps (Speed x${tickPerFrame}, cells: ${w * h})`
   }, 500)
 
   const perfBtn = document.getElementById('perfBtn')

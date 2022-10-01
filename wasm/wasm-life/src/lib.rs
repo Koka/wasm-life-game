@@ -1,4 +1,5 @@
 use std::fmt;
+use std::mem;
 
 use js_sys::Math::random;
 use wasm_bindgen::prelude::*;
@@ -21,6 +22,7 @@ pub struct Universe {
     width: u32,
     height: u32,
     cells: Vec<Cell>,
+    cells_next: Vec<Cell>,
 }
 
 fn initial_pattern(width: u32, height: u32) -> Vec<Cell> {
@@ -64,8 +66,6 @@ impl Universe {
         #[cfg(feature = "console_error_panic_hook")]
         console_error_panic_hook::set_once();
 
-        let mut next = self.cells.clone();
-
         for row in 0..self.height {
             for col in 0..self.width {
                 let idx = self.get_index(row, col);
@@ -89,26 +89,30 @@ impl Universe {
                     (otherwise, _) => otherwise,
                 };
 
+                let next = &mut self.cells_next;
                 next[idx] = next_cell;
             }
         }
 
-        self.cells = next;
+        mem::swap(&mut self.cells, &mut self.cells_next);
     }
 
     pub fn restart(&mut self) {
         self.cells = initial_pattern(self.width, self.height);
+        self.cells_next = self.cells.clone();
     }
 
     pub fn new() -> Universe {
-        let width = 128;
-        let height = 32;
+        let width = 256;
+        let height = 64;
         let cells = initial_pattern(width, height);
+        let cells_next = cells.clone();
 
         Universe {
             width,
             height,
             cells,
+            cells_next,
         }
     }
 
