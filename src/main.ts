@@ -8,8 +8,10 @@ type ICtx = ReturnType<typeof runLife>
 function buildUI(ctx: ICtx) {
   const fpsContainer = document.getElementById('fps') as HTMLElement
   setInterval(() => {
-    const num = Math.round(ctx.getFPS())
-    fpsContainer.textContent = `${num} fps`
+    const fpsNum = Math.round(ctx.getFPS())
+    const tickPerFrame = ctx.getSpeed()
+
+    fpsContainer.textContent = `${fpsNum} fps (Speed x${tickPerFrame})`
   }, 500)
 
   const perfBtn = document.getElementById('perfBtn')
@@ -42,7 +44,17 @@ function buildUI(ctx: ICtx) {
       ctx.restart()
     })
   }
+
+  const speedSlider =  document.getElementById('speedSlider') as HTMLInputElement
+  if (speedSlider) {
+    speedSlider.value = String(ctx.getSpeed())
+    speedSlider.addEventListener('change', (e: Event) => {
+      const tgt = e.target! as HTMLInputElement
+      ctx.setSpeed(Number(tgt.value))
+    })
+  }
 }
 
-let ctx = runLife()
+const canvas = document.getElementById('app') as HTMLCanvasElement
+let ctx = runLife(canvas)
 buildUI(ctx)

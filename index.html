@@ -13,16 +13,25 @@
   <body>
     <h1>WASM Game of Life</h1>
     <main>
-      <div id="fps">? fps</div>
+      <div class="infoValue" id="fps">? fps</div>
       <canvas id="app"></canvas>
     </main>
-    <p>Implemented with vanilla Typescript, WASM, and canvas</p>
 
     <div class="gameControls">
       <button class="gameButton" id="restartBtn">Restart</button>
       <button class="gameButton" id="playPauseBtn">Play / Pause</button>
       <button class="gameButton" id="perfBtn">Perf logging</button>
+
+      <div class="fullWidth">
+        <label class="gameLabel">
+          Game speed:
+          <input class="gameSlider" id="speedSlider" type="range" value="1" min="1" max="100" />
+        </label>
+      </div>
     </div>
+
+    <footer>Implemented with vanilla Typescript, WASM, and canvas</footer>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

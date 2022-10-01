@@ -6,7 +6,7 @@
   "scripts": {
     "wasm": "wasm-pack build ./wasm/wasm-life --release",
     "dev": "yarn wasm && vite",
-    "build": "yarn wasm && tsc && vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {

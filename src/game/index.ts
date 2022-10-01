@@ -26,9 +26,7 @@ function prepareUniverse() {
   return { widthCells, heightCells, tick, fetchCell, restart }
 }
 
-function initRenderer(widthCells: number, heightCells: number, fetchCell: (row: number, col: number) => boolean) {
-  const canvas = document.getElementById('app') as HTMLCanvasElement
-
+function initRenderer(canvas: HTMLCanvasElement, widthCells: number, heightCells: number, fetchCell: (row: number, col: number) => boolean) {
   const ctx = initCanvas(canvas, widthCells, heightCells)
   if (!ctx) throw new Error('No canvas 2d context')
 
@@ -40,21 +38,25 @@ function initRenderer(widthCells: number, heightCells: number, fetchCell: (row: 
   return render
 }
 
-function runLife() {
+function runLife(canvas: HTMLCanvasElement) {
   const { widthCells, heightCells, tick, fetchCell, restart } = prepareUniverse()
-  const render = initRenderer(widthCells, heightCells, fetchCell)
+  const render = initRenderer(canvas, widthCells, heightCells, fetchCell)
 
   let fps = 0
   const calcFps = (ms: number) => {
     fps = 1000 / ms
   }
 
+  let ticksPerFrame = 1
+
   let loop: null | ReturnType<typeof requestAnimationFrame> = null
 
   const gameLoop = perfSpan(
     'Loop iteration',
     () => {
-      tick()
+      for (let i = 0; i < ticksPerFrame; i++) {
+        tick()
+      }
       render()
       loop = requestAnimationFrame(gameLoop)
     },
@@ -65,12 +67,16 @@ function runLife() {
   loop = requestAnimationFrame(gameLoop)
 
   return {
+    getFPS: () => fps,
+
     restart: () => {
       restart()
       if (!loop) {
         render()
       }
     },
+
+    isPlaying: () => !!loop,
     play: () => {
       if (loop !== null) return
       loop = requestAnimationFrame(gameLoop)
@@ -81,8 +87,11 @@ function runLife() {
       }
       loop = null
     },
-    isPlaying: () => !!loop,
-    getFPS: () => fps,
+
+    getSpeed: () => ticksPerFrame,
+    setSpeed: (num: number) => {
+      ticksPerFrame = num
+    },
   }
 }
 
