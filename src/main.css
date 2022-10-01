@@ -7,22 +7,28 @@ html {
   margin: 0;
 }
 
-body {
-  display: initial;
-
+.gamePage {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  bottom: 0;
+  right: 0;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  overflow: hidden;
 }
 
 main {
-  margin: 16px 32px;
+  max-width: 85%;
+}
+
+main canvas {
+  width: 100%;
+  margin: 16px 0;
 }
 
 footer {
@@ -33,6 +39,8 @@ footer {
 }
 
 .gameControls {
+  margin: 0 auto;
+
   width: 100%;
   max-width: 500px;
 
@@ -56,10 +64,6 @@ footer {
 
 .gameLabel input {
   flex: 1;
-}
-
-.infoValue {
-  padding: 4px;
 }
 
 .gameButton {
