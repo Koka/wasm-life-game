@@ -1,10 +1,10 @@
 let logEnabled = false
 
-export const perfSpan =
-  <A extends any[], R>(name: string, fn: (...args: A) => R, logTime?: (time: number) => void): ((...args: A) => R) =>
-  (...args) => {
-    const start = performance.now()
+const prevTime = new Map<string, number>()
 
+export const perfSpan =
+  <A extends any[], R>(name: string, fn: (...args: A) => R, logTimeElapsed?: (time: number) => void): ((...args: A) => R) =>
+  (...args) => {
     if (logEnabled) {
       console.time(name)
     }
@@ -15,9 +15,13 @@ export const perfSpan =
         console.timeEnd(name)
       }
 
-      if (logTime) {
-        const finish = performance.now()
-        logTime(finish - start)
+      if (logTimeElapsed) {
+        const prev = prevTime.get(name)
+        const now = performance.now()
+        if (prev) {
+          logTimeElapsed(now - prev)
+        }
+        prevTime.set(name, now)
       }
     }
   }

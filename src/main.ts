@@ -9,11 +9,15 @@ function buildUI(ctx: ICtx) {
   const fpsContainer = document.getElementById('fps') as HTMLElement
   setInterval(() => {
     const fpsNum = Math.round(ctx.getFPS())
-    const tickPerFrame = ctx.getSpeed()
+    const tpsNum = Math.round(ctx.getTPS())
+    const speed = ctx.getSpeed()
+    const iterations = ctx.getIterationCount()
 
     const [w, h] = ctx.size
 
-    fpsContainer.textContent = `${fpsNum} fps (Speed x${tickPerFrame}, cells: ${w * h})`
+    fpsContainer.textContent = `${fpsNum} fps ${tpsNum} tps (Speed x${
+      speed > 0 ? speed : `1/${Math.abs(speed)}`
+    }, cells: ${w * h}, iterations: ${iterations})`
   }, 500)
 
   const perfBtn = document.getElementById('perfBtn')

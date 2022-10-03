@@ -9,12 +9,20 @@ function prepareUniverse() {
   const widthCells = universe.width()
   const heightCells = universe.height()
 
-  const tick = perfSpan('Engine tick', () => universe.tick())
+  let iterationCount = 0
+  let tps = 0
+  const calcTps = (ms: number) => {
+    tps = 1000 / ms
+    iterationCount++
+  }
+
+  const tick = perfSpan('Engine tick', () => universe.tick(), calcTps)
 
   let cells = new Uint8Array(memory.buffer, universe.cells(), widthCells * heightCells)
 
   const restart = () => {
     universe.restart()
+    iterationCount = 0
     cells = new Uint8Array(memory.buffer, universe.cells(), widthCells * heightCells)
   }
 
@@ -23,7 +31,15 @@ function prepareUniverse() {
     return cells[idx]
   }
 
-  return { widthCells, heightCells, tick, fetchCellAge, restart }
+  return {
+    widthCells,
+    heightCells,
+    tick,
+    fetchCellAge,
+    restart,
+    getTPS: () => tps,
+    getIterationCount: () => iterationCount,
+  }
 }
 
 function initRenderer(
@@ -44,7 +60,7 @@ function initRenderer(
 }
 
 function runLife(canvas: HTMLCanvasElement) {
-  const { widthCells, heightCells, tick, fetchCellAge, restart } = prepareUniverse()
+  const { widthCells, heightCells, tick, fetchCellAge, restart, getTPS, getIterationCount } = prepareUniverse()
   const render = initRenderer(canvas, widthCells, heightCells, fetchCellAge)
 
   let fps = 0
@@ -52,17 +68,28 @@ function runLife(canvas: HTMLCanvasElement) {
     fps = 1000 / ms
   }
 
-  let ticksPerFrame = 1
+  let speed = 1
 
   let loop: null | ReturnType<typeof requestAnimationFrame> = null
 
+  let loopsBeforeTick = 0
   const gameLoop = perfSpan(
     'Loop iteration',
     () => {
-      for (let i = 0; i < ticksPerFrame; i++) {
-        tick()
+      if (speed > 0) {
+        for (let i = 0; i < speed; i++) {
+          tick()
+        }
+      } else if (speed < 0) {
+        if (loopsBeforeTick > 0) {
+          loopsBeforeTick--
+        } else {
+          tick()
+          loopsBeforeTick = Math.abs(speed)
+        }
       }
       render()
+
       loop = requestAnimationFrame(gameLoop)
     },
     calcFps
@@ -74,6 +101,8 @@ function runLife(canvas: HTMLCanvasElement) {
   return {
     size: [widthCells, heightCells],
     getFPS: () => fps,
+    getTPS,
+    getIterationCount,
 
     restart: () => {
       restart()
@@ -94,9 +123,9 @@ function runLife(canvas: HTMLCanvasElement) {
       loop = null
     },
 
-    getSpeed: () => ticksPerFrame,
+    getSpeed: () => speed,
     setSpeed: (num: number) => {
-      ticksPerFrame = num
+      speed = num
     },
   }
 }
