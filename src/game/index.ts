@@ -1,8 +1,8 @@
-import { Cell, Universe } from "wasm/wasm-life/pkg/wasm_life"
-import { memory } from "wasm/wasm-life/pkg/wasm_life_bg.wasm"
+import { Universe } from 'wasm/wasm-life/pkg/wasm_life'
+import { memory } from 'wasm/wasm-life/pkg/wasm_life_bg.wasm'
 
-import { drawCells, drawGrid, initCanvas } from "./render"
-import { perfSpan } from "./perf"
+import { drawCells, drawGrid, initCanvas } from './render'
+import { perfSpan } from './perf'
 
 function prepareUniverse() {
   const universe = Universe.new()
@@ -18,29 +18,34 @@ function prepareUniverse() {
     cells = new Uint8Array(memory.buffer, universe.cells(), widthCells * heightCells)
   }
 
-  const fetchCell = (row: number, col: number) => {
+  const fetchCellAge = (row: number, col: number): number => {
     const idx = row * widthCells + col
-    return cells[idx] === Cell.Alive
+    return cells[idx]
   }
 
-  return { widthCells, heightCells, tick, fetchCell, restart }
+  return { widthCells, heightCells, tick, fetchCellAge, restart }
 }
 
-function initRenderer(canvas: HTMLCanvasElement, widthCells: number, heightCells: number, fetchCell: (row: number, col: number) => boolean) {
+function initRenderer(
+  canvas: HTMLCanvasElement,
+  widthCells: number,
+  heightCells: number,
+  fetchCellAge: (row: number, col: number) => number
+) {
   const ctx = initCanvas(canvas, widthCells, heightCells)
   if (!ctx) throw new Error('No canvas 2d context')
 
   const render = () => {
     drawGrid(ctx)
-    drawCells(ctx, widthCells, heightCells, fetchCell)
+    drawCells(ctx, widthCells, heightCells, fetchCellAge)
   }
 
   return render
 }
 
 function runLife(canvas: HTMLCanvasElement) {
-  const { widthCells, heightCells, tick, fetchCell, restart } = prepareUniverse()
-  const render = initRenderer(canvas, widthCells, heightCells, fetchCell)
+  const { widthCells, heightCells, tick, fetchCellAge, restart } = prepareUniverse()
+  const render = initRenderer(canvas, widthCells, heightCells, fetchCellAge)
 
   let fps = 0
   const calcFps = (ms: number) => {

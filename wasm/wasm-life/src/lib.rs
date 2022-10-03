@@ -10,11 +10,24 @@ use wee_alloc::WeeAlloc;
 static ALLOC: WeeAlloc = WeeAlloc::INIT;
 
 #[wasm_bindgen]
-#[repr(u8)]
+#[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Cell {
-    Dead = 0,
-    Alive = 1,
+pub struct Cell {
+    age: u8,
+}
+
+impl Cell {
+    fn new(alive: bool) -> Cell {
+        if alive {
+            Cell { age: 1 }
+        } else {
+            Cell { age: 0 }
+        }
+    }
+
+    fn alive(&self) -> bool {
+        self.age > 0
+    }
 }
 
 #[wasm_bindgen]
@@ -27,13 +40,7 @@ pub struct Universe {
 
 fn initial_pattern(width: u32, height: u32) -> Vec<Cell> {
     (0..width * height)
-        .map(|i| {
-            if i % 2 == 0 || (random() > 0.9) {
-                Cell::Alive
-            } else {
-                Cell::Dead
-            }
-        })
+        .map(|i| Cell::new(i % 2 == 0 || (random() > 0.9)))
         .collect()
 }
 
@@ -53,7 +60,9 @@ impl Universe {
                 let neighbor_row = (row + delta_row) % self.height;
                 let neighbor_col = (column + delta_col) % self.width;
                 let idx = self.get_index(neighbor_row, neighbor_col);
-                count += self.cells[idx] as u8;
+                if self.cells[idx].alive() {
+                    count += 1;
+                }
             }
         }
         count
@@ -75,18 +84,20 @@ impl Universe {
                 let next_cell = match (cell, live_neighbors) {
                     // Rule 1: Any live cell with fewer than two live neighbours
                     // dies, as if caused by underpopulation.
-                    (Cell::Alive, x) if x < 2 => Cell::Dead,
+                    (c, x) if c.alive() && x < 2 => Cell::new(false),
                     // Rule 2: Any live cell with two or three live neighbours
                     // lives on to the next generation.
-                    (Cell::Alive, 2) | (Cell::Alive, 3) => Cell::Alive,
+                    (c @ Cell { age }, 2) | (c @ Cell { age }, 3) if c.alive() => Cell {
+                        age: if age < 255 { age + 1 } else { age },
+                    },
                     // Rule 3: Any live cell with more than three live
                     // neighbours dies, as if by overpopulation.
-                    (Cell::Alive, x) if x > 3 => Cell::Dead,
+                    (c, x) if c.alive() && x > 3 => Cell::new(false),
                     // Rule 4: Any dead cell with exactly three live neighbours
                     // becomes a live cell, as if by reproduction.
-                    (Cell::Dead, 3) => Cell::Alive,
-                    // All other cells remain in the same state.
-                    (otherwise, _) => otherwise,
+                    (c, 3) if !c.alive() => Cell::new(true),
+                    // Other cells remain in the same state
+                    (c, _) => c,
                 };
 
                 let next = &mut self.cells_next;
@@ -133,7 +144,7 @@ impl fmt::Display for Universe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for line in self.cells.as_slice().chunks(self.width as usize) {
             for &cell in line {
-                let symbol = if cell == Cell::Dead { '◻' } else { '◼' };
+                let symbol = if cell.alive() { '◼' } else { '◻' };
                 write!(f, "{}", symbol)?;
             }
             write!(f, "\n")?;

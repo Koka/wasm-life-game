@@ -2,7 +2,7 @@ import { perfSpan } from "./perf"
 
 const GRID_COLOR = '#cccccc'
 const DEAD_COLOR = '#ffffff'
-const ALIVE_COLOR = '#000000'
+const NEWBORN_COLOR = '#0fa00f'
 
 const CELL_SIZE = 8
 
@@ -40,23 +40,43 @@ export const drawCells = perfSpan(
     ctx: CanvasRenderingContext2D,
     widthCells: number,
     heightCells: number,
-    isAlive: (row: number, col: number) => boolean
+    getAge: (row: number, col: number) => number
   ) => {
     ctx.beginPath()
 
-    ctx.fillStyle = ALIVE_COLOR
+    ctx.fillStyle = DEAD_COLOR
     for (let row = 0; row < heightCells; row++) {
       for (let col = 0; col < widthCells; col++) {
-        if (isAlive(row, col)) {
+        const age = getAge(row, col)
+        if (age === 0) {
           ctx.fillRect(col * (CELL_SIZE + 1) + 1, row * (CELL_SIZE + 1) + 1, CELL_SIZE, CELL_SIZE)
         }
       }
     }
 
-    ctx.fillStyle = DEAD_COLOR
+    ctx.fillStyle = NEWBORN_COLOR
     for (let row = 0; row < heightCells; row++) {
       for (let col = 0; col < widthCells; col++) {
-        if (!isAlive(row, col)) {
+        const age = getAge(row, col)
+        if (age === 1) {
+          ctx.fillRect(col * (CELL_SIZE + 1) + 1, row * (CELL_SIZE + 1) + 1, CELL_SIZE, CELL_SIZE)
+        }
+      }
+    }
+
+    const minGreen = 160
+    const fullRange = 255 - minGreen
+
+    for (let row = 0; row < heightCells; row++) {
+      for (let col = 0; col < widthCells; col++) {
+        const age = getAge(row, col)
+        if (age > 1) {
+          const green = Math.round(fullRange * age / 255)
+          const hexG = ('0' + (fullRange - green & 0xff).toString(16)).slice(-2)
+
+          const hexR = age > 127 ? 'a0' : '0f'
+
+          ctx.fillStyle = `#${hexR}${hexG}0f`
           ctx.fillRect(col * (CELL_SIZE + 1) + 1, row * (CELL_SIZE + 1) + 1, CELL_SIZE, CELL_SIZE)
         }
       }
