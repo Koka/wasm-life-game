@@ -1,5 +1,5 @@
 import runLife from './game'
-import { isPerfEnabled, setPerfEnabled } from './game/perf'
+import { isPerfEnabled, setPerfEnabled } from './game/util/perf'
 
 import './main.css'
 
@@ -59,8 +59,45 @@ function buildUI(ctx: ICtx) {
       ctx.setSpeed(Number(tgt.value))
     })
   }
+
+  canvas.addEventListener('click', (e: MouseEvent) => {
+    ctx.pause()
+    if (playPauseBtn) {
+      playPauseBtn.textContent = ctx.isPlaying() ? 'Pause' : 'Play'
+    }
+
+    requestAnimationFrame(() => {
+      const [canvasLeft, canvasTop] = cursorPos(e)
+      ctx.onClick(canvasLeft, canvasTop)
+    })
+  })
+
+  canvas.addEventListener('mousemove', (e: MouseEvent) => {
+    requestAnimationFrame(() => {
+      const [canvasLeft, canvasTop] = cursorPos(e)
+      ctx.onHover(canvasLeft, canvasTop)
+    })
+  })
+
+  canvas.addEventListener('mouseleave', () => {
+    ctx.onLeave()
+  })
 }
 
 const canvas = document.getElementById('app') as HTMLCanvasElement
+
 let ctx = runLife(canvas)
+
+const cursorPos = (e: MouseEvent) => {
+  const boundingRect = canvas.getBoundingClientRect()
+
+  const scaleX = canvas.width / boundingRect.width
+  const scaleY = canvas.height / boundingRect.height
+
+  const canvasLeft = (e.clientX - boundingRect.left) * scaleX
+  const canvasTop = (e.clientY - boundingRect.top) * scaleY
+
+  return [canvasLeft, canvasTop]
+}
+
 buildUI(ctx)

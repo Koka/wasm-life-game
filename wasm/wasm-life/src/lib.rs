@@ -2,6 +2,7 @@ use std::fmt;
 use std::mem;
 
 use js_sys::Math::random;
+
 use wasm_bindgen::prelude::*;
 use wee_alloc::WeeAlloc;
 
@@ -27,6 +28,10 @@ impl Cell {
 
     fn alive(&self) -> bool {
         self.age > 0
+    }
+
+    fn toggle(&mut self) {
+        self.age = if self.age > 0 { 0 } else { 1 }
     }
 }
 
@@ -71,6 +76,11 @@ impl Universe {
 
 #[wasm_bindgen]
 impl Universe {
+    pub fn toggle_cell(&mut self, row: u32, column: u32) {
+        let idx = self.get_index(row, column);
+        self.cells[idx].toggle();
+    }
+
     pub fn tick(&mut self) {
         #[cfg(feature = "console_error_panic_hook")]
         console_error_panic_hook::set_once();
@@ -114,8 +124,8 @@ impl Universe {
     }
 
     pub fn new() -> Universe {
-        let width = 256;
-        let height = 64;
+        let width = 128;
+        let height = 32;
         let cells = initial_pattern(width, height);
         let cells_next = cells.clone();
 

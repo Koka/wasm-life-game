@@ -1,67 +1,11 @@
-import { Universe } from 'wasm/wasm-life/pkg/wasm_life'
-import { memory } from 'wasm/wasm-life/pkg/wasm_life_bg.wasm'
-
-import { drawCells, drawGrid, initCanvas } from './render'
-import { perfSpan } from './perf'
-
-function prepareUniverse() {
-  const universe = Universe.new()
-  const widthCells = universe.width()
-  const heightCells = universe.height()
-
-  let iterationCount = 0
-  let tps = 0
-  const calcTps = (ms: number) => {
-    tps = 1000 / ms
-    iterationCount++
-  }
-
-  const tick = perfSpan('Engine tick', () => universe.tick(), calcTps)
-
-  let cells = new Uint8Array(memory.buffer, universe.cells(), widthCells * heightCells)
-
-  const restart = () => {
-    universe.restart()
-    iterationCount = 0
-    cells = new Uint8Array(memory.buffer, universe.cells(), widthCells * heightCells)
-  }
-
-  const fetchCellAge = (row: number, col: number): number => {
-    const idx = row * widthCells + col
-    return cells[idx]
-  }
-
-  return {
-    widthCells,
-    heightCells,
-    tick,
-    fetchCellAge,
-    restart,
-    getTPS: () => tps,
-    getIterationCount: () => iterationCount,
-  }
-}
-
-function initRenderer(
-  canvas: HTMLCanvasElement,
-  widthCells: number,
-  heightCells: number,
-  fetchCellAge: (row: number, col: number) => number
-) {
-  const ctx = initCanvas(canvas, widthCells, heightCells)
-  if (!ctx) throw new Error('No canvas 2d context')
-
-  const render = () => {
-    drawGrid(ctx)
-    drawCells(ctx, widthCells, heightCells, fetchCellAge)
-  }
-
-  return render
-}
+import { perfSpan } from './util/perf'
+import prepareUniverse from './logic'
+import initRenderer from './renderer'
 
 function runLife(canvas: HTMLCanvasElement) {
-  const { widthCells, heightCells, tick, fetchCellAge, restart, getTPS, getIterationCount } = prepareUniverse()
-  const render = initRenderer(canvas, widthCells, heightCells, fetchCellAge)
+  const { widthCells, heightCells, tick, getCells, toggleCell, restart, getTPS, getIterationCount } = prepareUniverse()
+
+  const { render, onClick, onHover, onLeave } = initRenderer(canvas, widthCells, heightCells, getCells, toggleCell)
 
   let fps = 0
   const calcFps = (ms: number) => {
@@ -101,7 +45,7 @@ function runLife(canvas: HTMLCanvasElement) {
   return {
     size: [widthCells, heightCells],
     getFPS: () => fps,
-    getTPS,
+    getTPS: () => (speed <= 1 ? getTPS() : fps * speed),
     getIterationCount,
 
     restart: () => {
@@ -125,8 +69,15 @@ function runLife(canvas: HTMLCanvasElement) {
 
     getSpeed: () => speed,
     setSpeed: (num: number) => {
-      speed = num
+      if (num === 0 || num === -1) {
+        speed = 1
+      } else {
+        speed = num
+      }
     },
+    onClick,
+    onHover,
+    onLeave,
   }
 }
 

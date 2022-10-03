@@ -33,6 +33,8 @@ main {
 main canvas {
   width: 100%;
   margin: 16px 0;
+  cursor: pointer;
+  user-select: none;
 }
 
 footer {
@@ -80,5 +82,6 @@ footer {
   padding: 8px 16px;
 
   cursor: pointer;
+  user-select: none;
 }
 
