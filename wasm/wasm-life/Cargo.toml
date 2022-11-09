@@ -22,3 +22,4 @@ wasm-bindgen-test = "0.3.33"
 
 [profile.release]
 opt-level = "s"
+lto = true
